@@ -1,4 +1,4 @@
-import React, {useEffect} from "react";
+import React, { useEffect, useCallback } from "react";
 import {
   View,
   Text,
@@ -9,27 +9,56 @@ import {
   Alert
 } from "react-native";
 import { THEME } from "../theme";
-import { DATA } from "../data";
-import {HeaderButtons, Item} from "react-navigation-header-buttons";
-import {AppHeaderIcon} from "../components/AppHeaderIcon";
+import { HeaderButtons, Item } from "react-navigation-header-buttons";
+import { AppHeaderIcon } from "../components/AppHeaderIcon";
+import { useDispatch, useSelector } from "react-redux";
+import { toggleBooked, removePost } from "../store/actions/post";
 
 export const PostScreen = ({ navigation }) => {
+  const dispatch = useDispatch();
   const postId = navigation.getParam("postId");
-  const post = DATA.find(p => p.id === postId);
+  const post = useSelector(state =>
+    state.post.allPosts.find(p => p.id === postId)
+  );
+
+  const booked = useSelector(state =>
+    state.post.bookedPosts.some(post => post.id === postId)
+  );
+
   useEffect(() => {
-    navigation.setParams({booked: post.booked})
-  }, []);
+    navigation.setParams({ booked });
+  }, [booked]);
+
+  const toggleHandler = useCallback(() => {
+    dispatch(toggleBooked(postId));
+  }, [dispatch, postId]);
+
+  useEffect(() => {
+    navigation.setParams({ toggleHandler });
+  }, [toggleHandler]);
+
   const removeHandler = () => {
     Alert.alert(
       "Удаление поста",
       "Ты серьезно, собака?",
       [
         { text: "Отменить", style: "cancel" },
-        { text: "Удалить", style: "destructive", onPress: () => {} }
+        {
+          text: "Удалить",
+          style: "destructive",
+          onPress: () => {
+            navigation.navigate("Main");
+            dispatch(removePost(postId));
+          }
+        }
       ],
       { cancelable: false }
     );
   };
+
+  if (!post) {
+    return null;
+  }
 
   return (
     <ScrollView>
@@ -48,14 +77,15 @@ export const PostScreen = ({ navigation }) => {
 
 PostScreen.navigationOptions = ({ navigation }) => {
   const date = navigation.getParam("date");
-  const booked = navigation.getParam('booked');
-  const iconName =  booked ? 'ios-star': 'ios-star-outline'
+  const booked = navigation.getParam("booked");
+  const toggleHandler = navigation.getParam("toggleHandler");
+  const iconName = booked ? "ios-star" : "ios-star-outline";
   return {
     headerTitle: "Пост от " + new Date(date).toLocaleDateString(),
     headerRight: (
-        <HeaderButtons HeaderButtonComponent={AppHeaderIcon}>
-          <Item title="Take photo" iconName={iconName} onPress={() => console.log('Press photo')} />
-        </HeaderButtons>
+      <HeaderButtons HeaderButtonComponent={AppHeaderIcon}>
+        <Item title="Take photo" iconName={iconName} onPress={toggleHandler} />
+      </HeaderButtons>
     )
   };
 };
