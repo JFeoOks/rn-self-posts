@@ -1,9 +1,14 @@
 import React from 'react'
-import {StyleSheet, View} from "react-native";
+import {StyleSheet, View, Text} from "react-native";
 import {FlatList} from "react-native-gesture-handler";
 import {Post} from "./Post";
 
 export const PostList = ({data, onOpen}) => {
+    if (!data.length) {
+        return <View style={styles.wrapper}>
+            <Text style={styles.noItem}>Да ты пес!!!!!!!!!!</Text>
+        </View>;
+    }
     return (
         <View style={styles.wrapper}>
             <FlatList
@@ -12,11 +17,17 @@ export const PostList = ({data, onOpen}) => {
                 renderItem={({item}) => <Post post={item} onOpen={onOpen}/>}
             />
         </View>
-    )
+    );
 };
 
 const styles = StyleSheet.create({
     wrapper: {
         padding: 10
+    },
+    noItem: {
+        fontFamily: 'open-regular',
+        textAlign: 'center',
+        marginVertical: 10,
+        fontSize: 18
     }
 });
